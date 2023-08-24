@@ -1,0 +1,51 @@
+---
+- name: Configure host
+  hosts: all
+  become: true
+  vars:
+    users:
+      - username: "cloudru"
+        groups: "cloudru"
+
+  tasks:
+    - name: Create groups
+      group:
+        name: "{{ item.groups }}"
+        state: present
+      loop: "{{ users }}"
+
+    - name: Create user accounts and add users to groups
+      user:
+        name: "{{ item.username }}"
+        groups: "{{ item.groups }}"
+      loop: "{{ users }}"
+
+    - name: Allow SSH login with key for users
+      authorized_key:
+        user: "{{ item.username }}"
+        key: "{{ lookup('file', 'keys/' + item.username + '.pub') }}"
+      loop: "{{ users }}"
+
+    - name: Copy public key for users
+      copy:
+        src: 'keys/{{ item.username }}.pub'
+        dest: '/home/{{ item.username }}/.ssh/authorized_keys'
+        owner: "{{ item.username }}"
+        group: "{{ item.groups }}"
+        mode: '0600'
+      loop: "{{ users }}"
+
+    - name: Disable SSH login for root user
+      lineinfile:
+        dest: /etc/ssh/sshd_config
+        regexp: '^PermitRootLogin'
+        line: 'PermitRootLogin no'
+        state: present
+      notify:
+        - restart sshd
+
+  handlers:
+    - name: restart sshd
+      service:
+        name: sshd
+        state: restarted

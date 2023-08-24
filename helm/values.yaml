@@ -1,0 +1,17 @@
+---
+image:
+
+#  name: suntrackspb/cloud-ru-app
+#  tag: latest
+#  imagePullPolicy: Never
+
+  name: docker.io/suntrackspb/cloud-ru-app
+  tag: latest
+  imagePullPolicy: IfNotPresent
+
+replicaCount: 3
+author: "SunTrack"
+
+
+
+

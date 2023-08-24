@@ -1,0 +1,14 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-cluster-ip
+  namespace: {{ .Release.Name }}-namespace
+spec:
+  selector:
+    app: {{ .Release.Name }}-srv
+  ports:
+    - protocol: TCP
+      port: 8000
+      targetPort: 8000
+  type: ClusterIP
