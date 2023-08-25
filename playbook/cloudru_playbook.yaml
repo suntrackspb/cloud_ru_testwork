@@ -26,14 +26,17 @@
         key: "{{ lookup('file', 'keys/' + item.username + '.pub') }}"
       loop: "{{ users }}"
 
-    - name: Copy public key for users
-      copy:
-        src: 'keys/{{ item.username }}.pub'
-        dest: '/home/{{ item.username }}/.ssh/authorized_keys'
-        owner: "{{ item.username }}"
-        group: "{{ item.groups }}"
-        mode: '0600'
-      loop: "{{ users }}"
+    - name: Allow SSH login with key if not UBUNTU
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: "{{ item.reg }}"
+        line: "{{ item.line }}"
+      with_items:
+        - { reg: '^#?PubkeyAuthentication', line: 'PubkeyAuthentication yes' }
+        - { reg: '^#?AuthorizedKeysFile', line: 'AuthorizedKeysFile     .ssh/authorized_keys' }
+      notify:
+        - restart sshd
+      when: ansible_distribution!= "Ubuntu"
 
     - name: Disable SSH login for root user
       lineinfile:
